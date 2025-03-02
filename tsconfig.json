@@ -1,0 +1,40 @@
+
+{
+  "compilerOptions": {
+    "target": "ES2017",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "strict": false,
+    "noEmit": true,
+    "esModuleInterop": true,
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "jsx": "preserve",
+    "incremental": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "baseUrl": ".",
+
+
+    "paths": {
+      "@/*": ["./app/*"],  // ✅ Next.js에서 절대 경로(@) 설정!
+      "@/lib/*": ["lib/*"], // ✅ @/lib 경로 설정 추가!
+      "@/context/*": ["context/*"],  // ✅ `context` 폴더의 절대 경로 지정
+      "@/firebase/*": ["firebase/*"],  // ✅ firebase 경로 alias 추가!
+      "@/components/*": ["components/*"]
+
+    },
+    
+
+  },
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"]
+}
+
+
