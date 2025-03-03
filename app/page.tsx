@@ -29,7 +29,9 @@ export default function HomePage() {
           <div className="flex flex-wrap gap-4">
             <Link href="/dashboard" className="bg-green-500 text-white px-6 py-2 rounded">📊 대시보드</Link>
             {role === "influencer" ? (
-              <Link href="/profile" className="bg-yellow-500 text-white px-6 py-2 rounded">📝 내 프로필 관리</Link>
+              <Link href={`/profile/${user.uid}`} className="bg-yellow-500 text-white px-6 py-2 rounded">
+                📝 내 프로필 관리
+              </Link>
             ) : (
               <Link href="/search" className="bg-blue-500 text-white px-6 py-2 rounded">🔍 인플루언서 검색</Link>
             )}

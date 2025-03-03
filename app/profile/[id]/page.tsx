@@ -1,23 +1,26 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useParams } from "next/navigation"; // ✅ URL에서 ID 가져오기
+import { useParams } from "next/navigation";
 import { db } from "@/firebase/firebaseConfig";
-import { doc, getDoc, collection, addDoc } from "firebase/firestore";
+import { doc, getDoc, collection, addDoc, query, where, orderBy, onSnapshot } from "firebase/firestore";
+import { useRole } from "@/context/RoleContext";
 
 export default function ProfilePage() {
-  const { id } = useParams(); // ✅ URL에서 인플루언서 ID 가져오기
+  const { id } = useParams(); // ✅ 인플루언서 ID 가져오기
+  const { user, role } = useRole(); // ✅ 로그인한 유저 정보 가져오기
   const [profile, setProfile] = useState(null);
   const [message, setMessage] = useState("");
+  const [messages, setMessages] = useState([]);
 
-  // ✅ Firestore에서 인플루언서 정보 가져오기
+  // ✅ Firestore에서 인플루언서 프로필 가져오기
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const docRef = doc(db, "influencers", id);
         const docSnap = await getDoc(docRef);
         if (docSnap.exists()) {
-          setProfile(docSnap.data()); // 모든 데이터 저장
+          setProfile(docSnap.data());
         } else {
           console.log("🔥 프로필을 찾을 수 없음");
         }
@@ -28,16 +31,35 @@ export default function ProfilePage() {
     fetchProfile();
   }, [id]);
 
+  // ✅ Firestore에서 메시지 실시간 업데이트 (onSnapshot 사용)
+  useEffect(() => {
+    if (!user) return;
+
+    const q = query(
+      collection(db, "messages"),
+      where("influencerId", "==", id),
+      where("userId", "==", user.uid),
+      orderBy("timestamp", "asc")
+    );
+
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const chatMessages = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setMessages(chatMessages);
+    });
+
+    return () => unsubscribe();
+  }, [id, user]);
+
   // ✅ 메시지 전송 기능
   const sendMessage = async () => {
-    if (!message.trim()) return;
+    if (!message.trim() || !user) return;
     try {
       await addDoc(collection(db, "messages"), {
         influencerId: id,
+        userId: user.uid,
         text: message,
         timestamp: new Date(),
       });
-      alert("✅ 메시지가 전송되었습니다!");
       setMessage(""); // 입력창 초기화
     } catch (error) {
       console.error("🔥 메시지 전송 오류:", error);
@@ -60,9 +82,15 @@ export default function ProfilePage() {
         </tbody>
       </table>
 
-      {/* 💬 메시지 보내기 기능 */}
-      <div className="mt-6">
-        <h3 className="text-xl font-bold mb-2">💬 메시지 보내기</h3>
+      {/* 💬 실시간 채팅 UI */}
+      <div className="mt-6 bg-gray-100 p-4 rounded">
+        <h3 className="text-xl font-bold mb-2">💬 메시지 기록</h3>
+        <div className="h-40 overflow-y-auto border p-2 mb-2">
+          {messages.map((msg) => (
+            <p key={msg.id} className="p-1 border-b">{msg.text}</p>
+          ))}
+        </div>
+
         <textarea 
           className="border p-2 w-full" 
           placeholder="메시지를 입력하세요..."
